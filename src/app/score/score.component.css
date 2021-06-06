@@ -2,13 +2,17 @@
   margin: 5px;
   display: inline-block;
   max-width: 50%;
+  overflow: hidden;
 }
 
-.mat-column-select {
-  overflow: initial;
+.mat-column-item {
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  max-width: 40vh;
 }
 
-.mat-paginator-container{
+.mat-paginator-container {
   background: black;
   justify-content: flex-start;
 }
@@ -47,15 +51,23 @@
   display: inline-block;
 }
 
-button{
-  margin-left: 2px;
-}
-
-.chosen-button{
+.chosen-button {
   color: white;
+  margin-left: 2px;
+  width: 200px;
+  height: 25px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
 }
 
-.not-chosen-button{
+.not-chosen-button {
   background: white;
   color: gray;
+  margin-left: 2px;
+  width: 200px;
+  height: 25px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
 }

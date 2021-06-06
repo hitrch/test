@@ -9,11 +9,10 @@ import {MatSort, MatSortable} from "@angular/material/sort";
   templateUrl: './score.component.html',
   styleUrls: ['./score.component.css']
 })
-export class ScoreComponent implements AfterViewInit{
+export class ScoreComponent implements AfterViewInit {
   displayedColumns: string[] = ['item', 'score', 'winner'];
-  itemArray: MatTableDataSource<{ name: string, score: Array<number>, winner: number }>;
-  matrixOfPreference: Array<number>;
-  numberOfItems: number = 0;
+  itemArray: MatTableDataSource<{ name: string, score: number, winner: number }>;
+  matrixOfPreference: Array<Array<number>>;
 
   @ViewChild(MatSort) sort!: MatSort;
 
@@ -25,25 +24,25 @@ export class ScoreComponent implements AfterViewInit{
   }
 
   ngAfterViewInit() {
-    this.sort.sort(({ id: 'name', start: 'desc'}) as MatSortable);
-    this.itemArray.sort = this.sort;
+    setTimeout(() => {
+      this.sort.sort(({id: 'score', start: 'desc'}) as MatSortable);
+      this.itemArray.sort = this.sort;
+      this.itemArray.paginator = this.paginator;
+    }, 0);
   }
 
   addItem(newItem: string) {
     if (this.isNewItem(newItem)) {
-      this.numberOfItems++;
-
       let array = [];
-      for (let i = 0; i < this.numberOfItems; i++) {
+      this.itemArray.data.push({name: newItem, score: 0, winner: 0});
+      for (let i in this.itemArray.data) {
         array.push(0);
       }
-
-      this.itemArray.data = this.itemArray.data.filter(item => {
-        item.score.push(0);
+      this.matrixOfPreference = this.matrixOfPreference.filter(item => {
+        item.push(0);
         return true;
       });
-
-      this.itemArray.data.push({name: newItem, score: array, winner: 0});
+      this.matrixOfPreference.push(array);
       this.itemArray.filter = "";
     } else {
       this.messageService.add(({severity: 'warn', summary: 'Warning', detail: 'Item already exists'}));
@@ -67,10 +66,10 @@ export class ScoreComponent implements AfterViewInit{
     this.messageService.clear('c');
   }
 
-  getItemsToCompare(currentItem: { name: string, score: Array<number>, winner: number })
-    : Array<{ name: string, score: Array<number>, winner: number }> {
+  getItemsToCompare(currentItem: { name: string, score: number, winner: number })
+    : Array<{ name: string, score: number, winner: number }> {
     let flag = false;
-    let arrayToCompare: Array<{ name: string, score: Array<number>, winner: number }> = [];
+    let arrayToCompare: Array<{ name: string, score: number, winner: number }> = [];
 
     for (let item of this.itemArray.data) {
       if (flag) {
@@ -85,13 +84,22 @@ export class ScoreComponent implements AfterViewInit{
 
   changeScore(name1: string, name2: string, position: number) {
     if (!position) {
-      this.itemArray.data[this.getPositionByName(name2)].score[this.getPositionByName(name1)] = 0;
-      this.itemArray.data[this.getPositionByName(name1)].score[this.getPositionByName(name2)] = 1;
+      this.changePreference(name1, name2);
     }
     if (position) {
-      this.itemArray.data[this.getPositionByName(name1)].score[this.getPositionByName(name2)] = 0;
-      this.itemArray.data[this.getPositionByName(name2)].score[this.getPositionByName(name1)] = 1;
+      this.changePreference(name2, name1);
     }
+
+    this.itemArray.sort = this.sort
+  }
+
+  changePreference(toItem: string, fromItem: string) {
+    this.matrixOfPreference[this.getPositionByName(fromItem)][this.getPositionByName(toItem)] = 0;
+    this.matrixOfPreference[this.getPositionByName(toItem)][this.getPositionByName(fromItem)] = 1;
+    this.itemArray.data[this.getPositionByName(toItem)].score =
+      this.matrixOfPreference[this.getPositionByName(toItem)].reduce((sum, x) => sum + x);
+    this.itemArray.data[this.getPositionByName(fromItem)].score =
+      this.matrixOfPreference[this.getPositionByName(fromItem)].reduce((sum, x) => sum + x);
   }
 
   getPositionByName(name: string): number {
@@ -108,25 +116,21 @@ export class ScoreComponent implements AfterViewInit{
   }
 
   isButtonChosen(name1: string, name2: string): boolean {
-    return this.itemArray.data[this.getPositionByName(name1)].score[this.getPositionByName(name2)] == 1;
+    return this.matrixOfPreference[this.getPositionByName(name1)][this.getPositionByName(name2)] == 1;
   }
 
-  getScore(name: string): number {
-    return this.itemArray.data[this.getPositionByName(name)].score.reduce((sum, x) => sum + x);
-  }
-
-  isWinner(name: string): boolean {
+  isWinner(element: { name: string, score: number, winner: number }): boolean {
     let best;
 
-    for (let item of this.itemArray.data) {
+    for (let item of this.matrixOfPreference) {
       if (!best) {
         best = item;
       }
-      if (best.score.reduce((sum, x) => sum + x) < item.score.reduce((sum, x) => sum + x)) {
+      if (best.reduce((sum, x) => sum + x) < item.reduce((sum, x) => sum + x)) {
         best = item;
       }
     }
-    return best? best.name === name : false;
+    return best ? best.reduce((sum, x) => sum + x) == element.score : false;
   }
 
 }
