@@ -1,0 +1,82 @@
+<p-toast></p-toast>
+<p-toast position="top-left" key="tl"></p-toast>
+<p-toast position="top-center" key="tc"></p-toast>
+<p-toast position="bottom-center" key="bc"></p-toast>
+
+<p-toast position="bottom-center" key="c" (onClose)="onReject()" [baseZIndex]="5000">
+  <ng-template let-message pTemplate="message">
+    <div class="p-flex p-flex-column" style="flex: 1">
+      <div class="p-text-center">
+        <i class="pi pi-exclamation-triangle" style="font-size: 3rem"></i>
+        <h4>{{message.summary}}</h4>
+        <p>{{message.detail}}</p>
+      </div>
+      <div class="p-grid p-fluid">
+        <div class="p-col-6">
+          <button type="button" pButton (click)="onConfirm()" label="Yes" class="p-button-success"></button>
+        </div>
+        <div class="p-col-6">
+          <button type="button" pButton (click)="onReject()" label="No" class="p-button-secondary"></button>
+        </div>
+      </div>
+    </div>
+  </ng-template>
+</p-toast>
+
+<div class="input">
+  <input type="text" pInputText placeholder="New item" #newItem/>
+  <p-button label="Add" (onClick)="addItem(newItem.value); newItem.value = ''" [disabled]="newItem.value == ''"></p-button>
+</div>
+
+<div class="itemTable">
+  <table mat-table [dataSource]="itemArray" matSort>
+    <ng-container matColumnDef="item">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header> Item </th>
+      <td mat-cell *matCellDef="let item"> {{item.name}} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="score">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header> Score </th>
+      <td mat-cell *matCellDef="let item"> {{getScore(item.name)}} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="winner">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>  </th>
+      <td mat-cell *matCellDef="let item">
+        <ng-container *ngIf="isWinner(item.name)">
+          <p-tag value="New"></p-tag>
+        </ng-container>
+      </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+  </table>
+
+  <mat-paginator [pageSize]="10" showFirstLastButtons></mat-paginator>
+</div>
+
+
+<div class="options">
+  <div>
+    Compare Items
+  </div>
+  <p-scrollPanel [style]="{width: '100%', height: '80vh'}" styleClass="scroll-options">
+    <div *ngFor="let item of itemArray.data; let i = index">
+      <div *ngFor="let itemToCompareWith of getItemsToCompare(item)">
+        <div class="select" >
+          <button pButton type="button" label="{{item.name}}"
+                  [class]="'p-button-raised p-button-text' && isButtonChosen(item.name, itemToCompareWith.name)? 'chosen-button' : 'not-chosen-button'"
+                  (click)="changeScore(item.name, itemToCompareWith.name, 0)">
+          </button>
+          <button pButton type="button" label="{{itemToCompareWith.name}}"
+                  [class]="'p-button-raised p-button-text' && isButtonChosen(itemToCompareWith.name, item.name)? 'chosen-button' : 'not-chosen-button'"
+                  (click)="changeScore(item.name, itemToCompareWith.name, 1)">
+          </button>
+        </div>
+      </div>
+    </div>
+  </p-scrollPanel>
+</div>
+
+
